@@ -8,9 +8,7 @@ m = length(alpha1_grid);
 nsim = 500;
 
 alpha_hat = zeros(nsim, m, K);
-beta_hat  = zeros(nsim, m, K);
-sigma_hat = zeros(nsim, m, K);
-mu_hat    = zeros(nsim, m, K);
+
 
 pd2 = makedist('Stable','alpha',alpha2,'beta',0,'gam',1,'delta',0);
 
@@ -26,7 +24,7 @@ for j = 1:m
             X2 = random(pd2,n(i),1);
             S = X1+X2;
     
-            [alpha_hat(sim,j,i),beta_hat(sim,j,i),sigma_hat(sim,j,i),mu_hat(sim,j,i)] = stableregkw(S);
+            alpha_hat(sim,j,i)= stableregkw(S);
 
             % similar to the code in 
             % "APPLICATION OF THE NONPARAMETRIC BOOTSTRAP, p334-335,
@@ -89,7 +87,7 @@ for i=1:K
             'Interpreter','latex');
         
     figure;
-    ax = gobjects(m,1);   % store axes handles
+    ax = gobjects(m,1);   
     
     for j = 1:m
         ax(j) = subplot(2,3,j);
@@ -99,7 +97,7 @@ for i=1:K
         ylabel('Frequency','Interpreter','latex');
     end
     
-    linkaxes(ax,'x');   % <-- this synchronizes all x-axes
+    linkaxes(ax,'x');  
     
     sgtitle(sprintf('Bootstrap 90%% CI Lengths (n = %d)', n(i)), ...
             'Interpreter','latex');

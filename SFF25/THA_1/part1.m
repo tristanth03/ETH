@@ -1,5 +1,3 @@
-%% Integrate function
-
 clc;clear; close all
 function fS_res = num_int(integrand,s,x)
     fS_res = zeros(size(s));
