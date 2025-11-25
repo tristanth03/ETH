@@ -1,8 +1,6 @@
 clc; clear; close all;
 
-rng(10);
 
-%%% https://ch.mathworks.com/matlabcentral/fileexchange/37514-stbl-alpha-stable-distributions-for-matlab
 function [x,p]=runthefft_single(n,h,alpha,beta,sigma,mu) % from Part I
 % From fftnoncentralchi2.m (Intermediate Propability ch2)
     N=2^n;
@@ -35,6 +33,10 @@ function pdf = stablepdf_fft(z,alpha,beta,sigma,mu) % from Part I
     pdf = interp1(xgrd, bigpdf, z, 'linear');
 end
 
+
+%% MLE (Single-Component)
+%%% https://ch.mathworks.com/matlabcentral/fileexchange/37514-stbl-alpha-stable-distributions-for-matlab
+rng(12345);
 function mle_uni = neglog_sym(theta,x)
     t_alpha = theta(1);
     t_logSigma = theta(2);
@@ -52,7 +54,7 @@ end
 
 function [alpha_hat,sigma_hat,mu_hat,theta_hat] = mle_symstable(x)
     neglog = @(theta) neglog_sym(theta,x);
-    alpha0 = 1.5;
+    alpha0 = 1.8;
     t_alpha0 = -log(2/alpha0 - 1);
     sigma0 = std(x);
     t_logSigma0 = log(sigma0);
@@ -69,13 +71,11 @@ function [alpha_hat,sigma_hat,mu_hat,theta_hat] = mle_symstable(x)
 end
 
 
-
-
-%%
-alpha_grid = linspace(1.2,1.8,6);
+%% Numerical Experiment Part III - (a)
+alpha_grid = linspace(1.2,1.8,7);
 m = length(alpha_grid);
-n = 10;
-nsim = 30;
+n = 10000;
+nsim = 10;
 sigma_true = 1;
 mu_true = 0;
 
@@ -104,427 +104,279 @@ for j = 1:m
 end
 elapsed_time = toc;
 fprintf("Total computation time: %.f s",elapsed_time)
-%%
+%% Plotting Part III - (a)
+
 figure;
-subplot(1,3,1)
+t = tiledlayout(1, 3, ...
+    'TileSpacing','compact', ...
+    'Padding','compact');
+nexttile;
 boxplot(alpha_hat, 'Labels', string(alpha_grid));
-title('$\alpha$ estimates', 'Interpreter','latex');
-xlabel('$\alpha$ grid', 'Interpreter','latex');
-ylabel('$\hat{\alpha}$', 'Interpreter','latex');
-grid on
+title('$\alpha$ estimates', 'Interpreter','latex', 'FontSize',24);
+xlabel('$\alpha$ grid', 'Interpreter','latex', 'FontSize',18);
+ylabel('$\hat{\alpha}$', 'Interpreter','latex', 'FontSize',24);
+grid on;
 
-subplot(1,3,2)
-boxplot(mu_hat, 'Labels', string(alpha_grid));
-title('$\mu$ estimates', 'Interpreter','latex');
-xlabel('$\alpha$ grid', 'Interpreter','latex');
-ylabel('$\hat{\mu}$', 'Interpreter','latex');
-yline(mu_true,'--k',Label='True value')
-
-grid on
-
-subplot(1,3,3)
+nexttile;
 boxplot(sigma_hat, 'Labels', string(alpha_grid));
-title('$\sigma$ estimates', 'Interpreter','latex');
-xlabel('$\alpha$ grid', 'Interpreter','latex');
-ylabel('$\hat{\sigma}$', 'Interpreter','latex');
-yline(sigma_true,'--k',Label='True value')
+title('$\sigma$ estimates', 'Interpreter','latex', 'FontSize',24);
+xlabel('$\alpha$ grid', 'Interpreter','latex', 'FontSize',18);
+ylabel('$\hat{\sigma}$', 'Interpreter','latex', 'FontSize',24);
+yline(sigma_true,'--k','True Value',FontSize=14);
 
-grid on
+grid on;
 
+nexttile;
+boxplot(mu_hat, 'Labels', string(alpha_grid));
+title('$\mu$ estimates', 'Interpreter','latex', 'FontSize',24);
+xlabel('$\alpha$ grid', 'Interpreter','latex', 'FontSize',18);
+ylabel('$\hat{\mu}$', 'Interpreter','latex', 'FontSize',24);
+yline(mu_true,'--k','True Value',FontSize=14);
+grid on;
 
+%% Numerical Experiment 2, Part III - (a)
+clc;clear;close all;
+rng(12345);
+k = 4;
+alpha_grid = linspace(1.2,1.8,k);
+n = 10000;
+sigma_true = 1;
+mu_true = 0;
 
-%% b
+pdf_true = zeros(n,k);
+pdf_hat = zeros(n,k);
+s = linspace(-10,10,n);
 
-% function mle_di = neglog_sym_di(theta,x)
-%     pi_ = 1/(1 + exp(-theta(1)));
-%     alpha1 = 2 * 1./(1+exp(-theta(2)));
-%     alpha2 = 2 * 1./(1+exp(-theta(3)));
-%     sigma1 = exp(theta(4));
-%     sigma2 = exp(theta(5));
-%     mu1 = theta(6);
-%     mu2 = theta(7);
-%     beta = 0; %symetric
-%     f1 = stablepdf_fft(x,alpha1,beta,sigma1,mu1);
-%     f2 = stablepdf_fft(x,alpha2,beta,sigma2,mu2);
-% 
-%     fmix = pi_*f1+(1-pi_)*f2;
-%     tol = 1e-16;
-%     fmix(fmix<tol) = tol;
-%     mle_di = -sum(log(fmix));
-% end
-
-function nll = neglog_sym_di(theta,x)
-
-    % Parameter transforms
-    pi_     = 1 ./ (1 + exp(-theta(1)));
-
-    % Constrain α to realistic range to avoid instability
-    alpha1  = 0.5 + 1.45 ./ (1 + exp(-theta(2)));
-    alpha2  = 0.5 + 1.45 ./ (1 + exp(-theta(3)));
-
-    sigma1  = exp(theta(4));
-    sigma2  = exp(theta(5));
-
-    mu1     = theta(6);
-    mu2     = theta(7);
-
-    % Compute PDFs
-    f1 = stablepdf_fft(x,alpha1,0,sigma1,mu1);
-    f2 = stablepdf_fft(x,alpha2,0,sigma2,mu2);
-
-    % Mixture density
-    f = pi_.*f1 + (1-pi_).*f2;
-
-    % Stabilize
-    f = max(f, 1e-14);
-
-    % Soft regularization (prevents divergence)
-    reg = 1e-4*(mu1^2 + mu2^2) + 1e-4*(sigma1^2 + sigma2^2);
-
-    nll = -sum(log(f)) + reg;
+for i=1:k
+    pd_true = makedist("Stable","alpha",alpha_grid(i),"beta",0,"gam",sigma_true,"delta",mu_true);
+    pdf_true(:,i) = stablepdf_fft(s,alpha_grid(i),0,sigma_true,mu_true);   
+    x = random(pd_true,n,1);
+    [a,sig,mu] = mle_symstable(x);
+    pdf_hat(:,i) = stablepdf_fft(s,a,0,sig,mu);
+   
 end
 
-% 
-% function [pi_hat,alpha_hat1,alpha_hat2,sigma_hat1,sigma_hat2,mu_hat1,mu_hat2] = mle_symstable_di(x)
-%     neglog = @(theta) neglog_sym_di(theta,x);
-%     eps_ = 0.1;
-%     pi_t = 0.5;
-%     alpha_t1 = 1.5;
-%     alpha_t2 = 1.5;
-%     sigma_t1 = eps_;
-%     sigma_t2 = 2*eps_;
-%     mu_t1 = eps;
-%     mu_t2 = -eps_;
-%     theta0 = [pi_t;-log(2/alpha_t1-1);-log(2/alpha_t2-1);log(sigma_t1);log(sigma_t2);mu_t1;mu_t2];
-%     % from http://mathworks.com/help/optim/ug/fminunc.html
-%     theta_hat = fminunc(neglog, theta0, ...
-%         optimoptions('fminunc','Algorithm','quasi-newton',...
-%                          'Display','off','MaxIterations',200,'MaxFunctionEvaluations',400));
-%     pi_hat   = 1/(1+exp(-theta_hat(1)));
-%     alpha_hat1   = 2./(1+exp(-theta_hat(2)));
-%     alpha_hat2   = 2./(1+exp(-theta_hat(3)));
-%     sigma_hat1   = exp(theta_hat(4));
-%     sigma_hat2   = exp(theta_hat(5));
-%     mu_hat1  = theta_hat(6);
-%     mu_hat2  = theta_hat(7);
-% 
-% end
-
-function [pi_hat,a1,a2,s1,s2,m1,m2] = mle_symstable_di(x)
-
-    % Robust initial location
-    m = trimmean(x,20);
-    s = mad(x,1)/0.6745;
-
-    % Initial guess
-    pi0 = 0.5;
-    alpha0 = 1.5;
-
-    theta0 = [
-        log(pi0/(1-pi0));     % t_pi
-        log(alpha0/(2-alpha0));  % t_alpha1
-        log(alpha0/(2-alpha0));  % t_alpha2
-        log(s);               % log sigma1
-        log(s*1.5);           % log sigma2
-        m + s;                % mu1
-        m - s                 % mu2
-    ];
-
-    % Optimize
-    opt = optimoptions('fminunc','Algorithm','quasi-newton',...
-                       'Display','none','MaxIterations',300,...
-                       'MaxFunctionEvaluations',600);
-
-    theta_hat = fminunc(@(th) neglog_sym_di(th,x), theta0, opt);
-
-    % Convert back
-    pi_hat = 1./(1 + exp(-theta_hat(1)));
-
-    % α constrained to [0.5,1.95] automatically
-    a1  = 0.5 + 1.45 ./ (1 + exp(-theta_hat(2)));
-    a2  = 0.5 + 1.45 ./ (1 + exp(-theta_hat(3)));
-
-    s1  = exp(theta_hat(4));
-    s2  = exp(theta_hat(5));
-
-    m1  = theta_hat(6);
-    m2  = theta_hat(7);
+%% Plotting (2) Part III - (a)
+function pl = pl_res(x_lim, s, fT, fH,alpha_grid)
+    figure;
+    t = tiledlayout(2, 2, ...
+        'TileSpacing','compact', ...
+        'Padding','compact');
+    for i=1:length(alpha_grid)
+        nexttile;
+        tP = plot(s,fT(:,i),'-b');
+        title(sprintf('PDF comparison ($\\alpha$ = %.2f)', alpha_grid(i)), 'Interpreter','latex', 'FontSize',24);
+        hold on
+        tH = plot(s,fH(:,i),'--r');
+        xlabel('s', 'Interpreter','latex', 'FontSize',18);
+        ylabel('$f_S(s)$', 'Interpreter','latex', 'FontSize',24);
+        legend([tP,tH],{"True FFT","MLE"},'Interpreter','latex', 'FontSize',24)
+        grid on;
+        xlim(x_lim)
+    end
+    pl = 1;
 end
 
-
-% function [pi_hat,alpha_hat1,alpha_hat2,sigma_hat1,sigma_hat2,mu_hat1,mu_hat2] = mle_symstable_di(x)
-%     % The negative log-likelihood function
-%     neglog = @(theta) neglog_sym_di(theta,x);
-% 
-%     % --- SMART INITIALIZATION using k-Means Clustering ---
-% 
-%     % 1. K-means clustering (k=2) to get initial assignments
-%     % 'Replicates', 5 increases robustness against poor local optima in k-means
-%     % Note: x must be a column vector for k-means.
-%     X_data = x(:);
-% 
-%     try
-%         [idx, ~] = kmeans(X_data, 2, 'Replicates', 5);
-%         C1 = (idx == 1);
-%         C2 = (idx == 2);
-% 
-%         % Handle potential empty clusters (unlikely for large N but good practice)
-%         if sum(C1) == 0 || sum(C2) == 0
-%             warning('K-means resulted in an empty cluster. Falling back to robust moment matching initialization.');
-%             is_kmeans_fail = true;
-%         else
-%             is_kmeans_fail = false;
-%         end
-%     catch ME
-%         warning(['K-means failed with error: ', ME.message, '. Falling back to robust moment matching initialization.']);
-%         is_kmeans_fail = true;
-%     end
-% 
-% 
-%     if is_kmeans_fail
-%         % Fallback: Robust initial guess for moments, assuming equal weight and spread
-%         pi_t = 0.5;
-%         % Use median and IQR for robustness
-%         median_x = median(x);
-%         iqr_x = iqr(x);
-% 
-%         % Split means slightly around the median
-%         mu_t1 = median_x + 0.25 * iqr_x;
-%         mu_t2 = median_x - 0.25 * iqr_x;
-% 
-%         % Split scales equally (based on overall IQR)
-%         sigma_t1 = iqr_x / 4; % A fraction of overall IQR
-%         sigma_t2 = iqr_x / 4; 
-% 
-%     else
-%         % Initialization based on k-Means clusters
-%         pi_t = sum(C1) / length(x);
-%         mu_t1 = mean(x(C1));
-%         mu_t2 = mean(x(C2));
-% 
-%         % Use robust scale estimation (std is fine as a start)
-%         sigma_t1 = std(x(C1));
-%         sigma_t2 = std(x(C2));
-%     end
-% 
-%     % 3. Fixed or Simple Alpha Guess: 1.5 is a safe, middle-ground start
-%     alpha_t1 = 1.5;
-%     alpha_t2 = 1.5;
-% 
-%     % Ensure scales are positive and not too small for log function
-%     min_sigma = 1e-4;
-%     sigma_t1 = max(sigma_t1, min_sigma);
-%     sigma_t2 = max(sigma_t2, min_sigma);
-% 
-%     % --- 4. Convert to Transformed Space (theta0) ---
-% 
-%     % Note on parameter order: [pi_t; t_alpha1; t_alpha2; t_logSigma1; t_logSigma2; mu1; mu2]
-%     theta0 = [-log(1/pi_t - 1);        ...  % t_pi: enforces pi in (0,1)
-%               -log(2/alpha_t1-1);      ...  % t_alpha1: enforces alpha1 in (0,2)
-%               -log(2/alpha_t2-1);      ...  % t_alpha2: enforces alpha2 in (0,2)
-%                log(sigma_t1);          ...  % t_logSigma1: enforces sigma1 in (0,inf)
-%                log(sigma_t2);          ...  % t_logSigma2: enforces sigma2 in (0,inf)
-%                mu_t1;                  ...  % mu1: unconstrained
-%                mu_t2];                 ...  % mu2: unconstrained
-% 
-%     % --- Optimization ---
-% 
-%     % from http://mathworks.com/help/optim/ug/fminunc.html
-%     theta_hat = fminunc(neglog, theta0, ...
-%         optimoptions('fminunc','Algorithm','quasi-newton',...
-%                          'Display','off','MaxIterations',200,'MaxFunctionEvaluations',400));
-% 
-%     % --- Convert back to natural parameters ---
-%     pi_hat       = 1/(1+exp(-theta_hat(1)));
-%     alpha_hat1   = 2./(1+exp(-theta_hat(2)));
-%     alpha_hat2   = 2./(1+exp(-theta_hat(3)));
-%     sigma_hat1   = exp(theta_hat(4));
-%     sigma_hat2   = exp(theta_hat(5));
-%     mu_hat1      = theta_hat(6);
-%     mu_hat2      = theta_hat(7);
-% end
-
+pl_res([-10,10],s,pdf_true,pdf_hat,alpha_grid);
+pl_res([4,10],s,pdf_true,pdf_hat,alpha_grid);
 
 %%
 
-alpha1_grid = linspace(1.25,1.45,6);
-alpha2_grid = alpha1_grid+0.5;
 
-sigma1_true = 1; sigma2_true = 2; 
-mu1_true = 0; mu2_true = 0; 
-pi_true = 0.8;
+% nexttile;
+% boxplot(sigma_hat, 'Labels', string(alpha_grid));
+% title('$\sigma$ estimates', 'Interpreter','latex', 'FontSize',24);
+% xlabel('$\alpha$ grid', 'Interpreter','latex', 'FontSize',18);
+% ylabel('$\hat{\sigma}$', 'Interpreter','latex', 'FontSize',24);
+% yline(sigma_true,'--k','True Value',FontSize=14);
 % 
-% sigma1_true = 1; sigma2_true = 2; 
-% mu1_true = 0; mu2_true = 0; 
-% pi_true = 0.8;
-
-pi_hat = zeros(nsim,m);
-alpha1_hat = zeros(nsim,m);
-alpha2_hat = zeros(nsim,m);
-sigma1_hat = zeros(nsim,m);
-sigma2_hat = zeros(nsim,m);
-mu1_hat = zeros(nsim,m);
-mu2_hat = zeros(nsim,m);
+% grid on;
+% 
+% nexttile;
+% boxplot(mu_hat, 'Labels', string(alpha_grid));
+% title('$\mu$ estimates', 'Interpreter','latex', 'FontSize',24);
+% xlabel('$\alpha$ grid', 'Interpreter','latex', 'FontSize',18);
+% ylabel('$\hat{\mu}$', 'Interpreter','latex', 'FontSize',24);
+% yline(mu_true,'--k','True Value',FontSize=14);
+% grid on;
 
 
-total_iterations_b = m * nsim;
-counter_b = 0;
-tic;
-for j = 1:m
-    pd1_true = makedist("Stable","alpha",alpha1_grid(j),"beta",0,"gam",sigma1_true,"delta",mu1_true);
-    pd2_true = makedist("Stable","alpha",alpha2_grid(j),"beta",0,"gam",sigma2_true,"delta",mu2_true);
 
-    for s = 1:nsim
-        comp = rand(n,1) < pi_true;
-        x = zeros(n,1);
-        x(comp)  = random(pd1_true,sum(comp),1);
-        x(~comp) = random(pd2_true,n - sum(comp),1);
-        [pi_hat(s,j), alpha1_hat(s,j), alpha2_hat(s,j), sigma1_hat(s,j),sigma2_hat(s,j), mu1_hat(s,j), mu2_hat(s,j)] = mle_symstable_di(x);
-        counter_b = counter_b + 1;
 
-        if mod(counter_b, 1) == 0  
-            fprintf('Progress: %5.1f%%   (n = %d, sim = %d/%d)\n', ...
-                100 * counter_b / total_iterations_b,n, s, nsim);
-        end
-    end
+%% MLE two-component
+function mle_di = neglog_sym_di(theta,x)
+    pi_ = 1/(1 + exp(-theta(1)));
+    alpha1 = 2 * 1./(1+exp(-theta(2)));
+    alpha2 = 2 * 1./(1+exp(-theta(3)));
+    sigma1 = exp(theta(4));
+    sigma2 = exp(theta(5));
+    mu1 = theta(6);
+    mu2 = theta(7);
+    beta = 0; %symetric
+    f1 = stablepdf_fft(x,alpha1,beta,sigma1,mu1);
+    f2 = stablepdf_fft(x,alpha2,beta,sigma2,mu2);
+
+    fmix = pi_*f1+(1-pi_)*f2;
+    tol = 1e-16;
+    fmix(fmix<tol) = tol;
+    mle_di = -sum(log(fmix));
 end
-elapsed_time = toc;
-fprintf("Total computation time: %.f s\n",elapsed_time)
 
-%% 
+function [pi_hat,alpha_hat1,alpha_hat2,sigma_hat1,sigma_hat2,mu_hat1,mu_hat2] = mle_symstable_di(x)
+    neglog = @(theta) neglog_sym_di(theta,x);
+    eps_ = 0.1;
+    pi_t = 0.5;
+    alpha_t1 = 1.5-eps_;
+    alpha_t2 = 1.5+eps_;
+    sigma_t1 = eps_;
+    sigma_t2 = eps_;
+    mu_t1 = eps;
+    mu_t2 = -eps_;
+    theta0 = [pi_t;-log(2/alpha_t1-1);-log(2/alpha_t2-1);log(sigma_t1);log(sigma_t2);mu_t1;mu_t2];
+    % from http://mathworks.com/help/optim/ug/fminunc.html
+    theta_hat = fminunc(neglog, theta0, ...
+        optimoptions('fminunc','Algorithm','quasi-newton',...
+                         'Display','off','MaxIterations',200,'MaxFunctionEvaluations',400));
+    pi_hat   = 1/(1+exp(-theta_hat(1)));
+    alpha_hat1   = 2./(1+exp(-theta_hat(2)));
+    alpha_hat2   = 2./(1+exp(-theta_hat(3)));
+    sigma_hat1   = exp(theta_hat(4));
+    sigma_hat2   = exp(theta_hat(5));
+    mu_hat1  = theta_hat(6);
+    mu_hat2  = theta_hat(7);
 
-figure;
-subplot(2,3,1)
-boxplot(alpha1_hat, 'Labels', string(alpha1_grid));
-title('$\alpha_1$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-ylabel('$\hat{\alpha_1}$', 'Interpreter','latex');
-grid on
+end
 
 
-% figure;
-subplot(2,3,2)
-boxplot(alpha2_hat, 'Labels', string(alpha2_grid));
-title('$\alpha_2$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_2$ grid', 'Interpreter','latex');
-ylabel('$\hat{\alpha_2}$', 'Interpreter','latex');
-grid on
 
-subplot(2,3,3)
-boxplot(mu1_hat, 'Labels', string(alpha1_grid));
-title('$\mu_1$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-ylabel('$\hat{\mu_1}$', 'Interpreter','latex');
-yline(mu_true,'--k',Label='True value')
+%% Numerical Experiment Part III - (b)
+clc;clear;close all;
+rng(12345);
+k = 4;
+alpha1_grid = linspace(1.2,1.8,k);
+alpha2 = 1.5;
+n = 10000;
+sigma_true = 1;
+mu_true = 0;
+pi_true = 0.6;
 
-grid on
+pdf_true = zeros(n,k);
+pdf_hat = zeros(n,k);
+s = linspace(-10,10,n);
 
-subplot(2,3,4)
-boxplot(mu2_hat, 'Labels', string(alpha2_grid));
-title('$\mu_2$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_2$ grid', 'Interpreter','latex');
-ylabel('$\hat{\mu_2}$', 'Interpreter','latex');
-yline(sigma_true,'--k',Label='True value')
+pd2_true = makedist("Stable","alpha",alpha2,"beta",0,"gam",sigma_true,"delta",mu_true);
+for i=1:k
+    pd1_true = makedist("Stable","alpha",alpha1_grid(i),"beta",0,"gam",sigma_true,"delta",mu_true);
 
-grid on
+    pdf_true(:,i) = pi_true.*stablepdf_fft(s,alpha1_grid(i),0,sigma_true,mu_true) + (1-pi_true).*stablepdf_fft(s,alpha2,0,sigma_true,mu_true);   
 
-subplot(2,3,5)
-boxplot(sigma1_hat, 'Labels', string(alpha1_grid));
-title('$\sigma_1$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-ylabel('$\hat{\sigma_1}$', 'Interpreter','latex');
-yline(mu_true,'--k',Label='True value')
-ylim([0,20])
+    u = rand(n,1);
+    idx1 = u < pi_true;
+    idx2 = u >= pi_true;
+    x = zeros(n,1);
+    x(idx1) = random(pd1_true,sum(idx1),1);
+    x(idx2) = random(pd2_true,sum(idx2),1);
 
-grid on
+    [pi_hat, alpha_hat1, alpha_hat2, sigma_hat1, sigma_hat2, mu_hat1, mu_hat2] = mle_symstable_di(x);
+    f1_hat = stablepdf_fft(s, alpha_hat1, 0, sigma_hat1, mu_hat1);
+    f2_hat = stablepdf_fft(s, alpha_hat2, 0, sigma_hat2, mu_hat2);
+    pdf_hat(:, i) = pi_hat * f1_hat + (1 - pi_hat) * f2_hat;
 
-subplot(2,3,6)
-boxplot(sigma2_hat, 'Labels', string(alpha2_grid));
-title('$\sigma_2$ estimates', 'Interpreter','latex');
-xlabel('$\alpha_2$ grid', 'Interpreter','latex');
-ylabel('$\hat{\sigma_2}$', 'Interpreter','latex');
-yline(sigma_true,'--k',Label='True value')
-grid on
+end
+%%
+function pl = pl_res2(x_lim, s, fT,fH,alpha1_grid, alpha2,pi)
+    figure;
+    t = tiledlayout(2, 2, ...
+        'TileSpacing','compact', ...
+        'Padding','compact');
+    for i=1:length(alpha1_grid)
+        nexttile;
+        tP = plot(s,fT(:,i),'-b');
+        title(sprintf('PDF comparison ($\\alpha_1$ = %.2f, $\\alpha_2$ = %.2f, $\\pi$ = %.2f)', alpha1_grid(i),alpha2,pi), ...
+            'Interpreter','latex', 'FontSize',24);
+        hold on
+        tH = plot(s,fH(:,i),'--r');
+        xlabel('s', 'Interpreter','latex', 'FontSize',18);
+        ylabel('$f_S(s)$', 'Interpreter','latex', 'FontSize',24);
+        legend([tP,tH],{"True FFT","MLE"},'Interpreter','latex', 'FontSize',24)
+        grid on;
+        xlim(x_lim)
+    end
+    pl = 1;
+end
+
+pl_res2([-10,10],s,pdf_true,pdf_hat,alpha1_grid,alpha2,pi_true);
+pl_res2([4,10],s,pdf_true,pdf_hat,alpha1_grid,alpha2,pi_true);
+
 
 
 %% c
+clear;close all;clc;
 r_data = importdata("DJIA30stockreturns.mat");
-[nobs, nStocks] = size(r_data);
+[days, nStocks] = size(r_data);
 
-% Preallocate — now the variables exist!
-pi_hat_data      = zeros(1, nStocks);
-alpha1_hat_data  = zeros(1, nStocks);
-alpha2_hat_data  = zeros(1, nStocks);
-sigma1_hat_data  = zeros(1, nStocks);
-sigma2_hat_data  = zeros(1, nStocks);
-mu1_hat_data     = zeros(1, nStocks);
-mu2_hat_data     = zeros(1, nStocks);
-
-for j = 1:nStocks
-    x = r_data(:, j);
-
-    try
-        [pi_hat_data(j), alpha1_hat_data(j), alpha2_hat_data(j), ...
-         sigma1_hat_data(j), sigma2_hat_data(j), ...
-         mu1_hat_data(j), mu2_hat_data(j)] = mle_symstable_di(x);
-
-    catch
-        % If it fails, we leave zeros.
-        % That's exactly what you said you want.
-    end
+pi_hat_dta = zeros(nStocks, 1);
+alpha_hat1_dta = zeros(nStocks, 1);
+alpha_hat2_dta = zeros(nStocks, 1);
+sigma_hat1_dta = zeros(nStocks, 1);
+sigma_hat2_dta = zeros(nStocks, 1);
+mu_hat1_dta = zeros(nStocks, 1);
+mu_hat2_dta = zeros(nStocks, 1);
+pdf_hat = zeros(days, nStocks);
+for stock = 1:nStocks
+    stockDta = r_data(:, stock);
+    [pi_hat, alpha_hat1, alpha_hat2, sigma_hat1, sigma_hat2, mu_hat1, mu_hat2] = mle_symstable_di(stockDta);
+    pi_hat_dta(stock) = pi_hat;
+    alpha_hat1_dta(stock) = alpha_hat1;
+    alpha_hat2_dta(stock) = alpha_hat2;
+    sigma_hat1_dta(stock) = sigma_hat1;
+    sigma_hat2_dta(stock) = sigma_hat2;
+    mu_hat1_dta(stock) = mu_hat1;
+    mu_hat2_dta(stock) = mu_hat2;
+    f1_hat = stablepdf_fft(stockDta, alpha_hat1, 0, sigma_hat1, mu_hat1);
+    f2_hat = stablepdf_fft(stockDta, alpha_hat2, 0, sigma_hat2, mu_hat2);
+    pdf_hat(:, stock) = pi_hat * f1_hat + (1 - pi_hat) * f2_hat;
 end
 
-figure;
-xgrid = linspace(-0.15, 0.15, 400)';
-
-for i = 1:nStocks
-    subplot(5,5,i);
-    histogram(r_data(:,i), 40, 'Normalization','pdf', ...
-              'DisplayStyle','stairs');
-    hold on;
-
-    % Only plot mixture if parameters are non-zero  
-    if pi_hat_data(i) > 0 && ...
-       alpha1_hat_data(i) > 0 && alpha2_hat_data(i) > 0 && ...
-       sigma1_hat_data(i) > 0 && sigma2_hat_data(i) > 0
-
-        pi_ = pi_hat_data(i);
-        a1  = alpha1_hat_data(i);
-        a2  = alpha2_hat_data(i);
-        s1  = sigma1_hat_data(i);
-        s2  = sigma2_hat_data(i);
-        m1  = mu1_hat_data(i);
-        m2  = mu2_hat_data(i);
-
-        f1 = stablepdf_fft(xgrid, a1, 0, s1, m1);
-        f2 = stablepdf_fft(xgrid, a2, 0, s2, m2);
-        fmix = pi_ .* f1 + (1 - pi_) .* f2;
-
-        plot(xgrid, fmix, 'LineWidth', 1.5);
-        legend('Histogram','Mixture Fit','Location','best');
-    else
-        legend('Histogram','Location','best');
-    end
-
-    title(['Stock ', num2str(i)]);
-    xlabel('Return');
-    ylabel('Density');
-    axis tight;
-end
-
-sgtitle('DJIA Stock Returns with 2-Component Symmetric Stable Mixture Fits');
 
 %%
-disp("mu1")
-disp(mu1_hat_data)
-disp("\n")
-disp("mu2")
-disp(mu2_hat_data)
-disp("\n")
-disp("sigma1")
-disp(sigma1_hat_data)
-disp("\n")
-disp("sigma2")
-disp(sigma2_hat_data)
-disp("\n")
+figure;
+t = tiledlayout(5,5, ...
+    'TileSpacing','compact', ...
+    'Padding','compact');
+for stock=1:nStocks
+    nexttile;
+    stockDta = r_data(:,stock);
+    [sorted_stockDta, sort_idx] = sort(stockDta);
+    sorted_pdf_hat = pdf_hat(sort_idx, stock);
+    tH = plot(sorted_stockDta,sorted_pdf_hat,'-b',LineWidth=2);
+    title(sprintf('Stock # %.d', stock),'Interpreter','latex', 'FontSize',12);
+    hold on
+    tP = histogram(stockDta,int32(sqrt(days)),'Normalization','pdf');
+    xlabel('Returns', 'Interpreter','latex', 'FontSize',14);
+    ylabel('Density', 'Interpreter','latex', 'FontSize',16);
+    if stock == 1
+        legend([tH, tP], {'Two-component','True'}, 'Location','northwest', ...
+            'Interpreter','latex',fontsize=14);
+    end
+   
+end
+
+%%
+parameterMatrix = [pi_hat_dta, alpha_hat1_dta, alpha_hat2_dta, ...
+                   sigma_hat1_dta, sigma_hat2_dta, mu_hat1_dta,mu_hat2_dta];
+
+labels = {'$\hat{\pi}$', '$\hat{\alpha}_1$', '$\hat{\alpha}_2$', ...
+          '$\hat{\sigma}_1$', '$\hat{\sigma}_2$', '$\hat{\mu}_1$', '$\hat{\mu}_2$'};
+
+figure;
+boxplot(parameterMatrix, 'Labels', string(labels));
+title('Distribution of Estimated Parameters Across Stocks', 'Interpreter', ...
+    'latex', 'FontSize',24);
+ylabel('Parameter Value', 'FontSize',24);
+grid on;
+ax = gca;
+ax.TickLabelInterpreter = 'latex';  
+ax.XAxis.FontSize = 24; 
+ax.YAxis.FontSize = 24;
 

@@ -8,13 +8,15 @@ m = length(alpha1_grid);
 nsim = 500;
 
 alpha_hat = zeros(nsim, m, K);
-
+beta_hat  = zeros(nsim, m, K);
+sigma_hat = zeros(nsim, m, K);
+mu_hat    = zeros(nsim, m, K);
 
 pd2 = makedist('Stable','alpha',alpha2,'beta',0,'gam',1,'delta',0);
 
 total_iterations = m * K * nsim;
 counter = 0;
-B = 200;
+B = 500;
 CI_length = zeros(nsim, m, K);
 for j = 1:m
     pd1 = makedist('Stable','alpha',alpha1_grid(j),'beta',0,'gam',1,'delta',0);
@@ -24,7 +26,7 @@ for j = 1:m
             X2 = random(pd2,n(i),1);
             S = X1+X2;
     
-            alpha_hat(sim,j,i)= stableregkw(S);
+            [alpha_hat(sim,j,i),beta_hat(sim,j,i),sigma_hat(sim,j,i),mu_hat(sim,j,i)] = stableregkw(S);
 
             % similar to the code in 
             % "APPLICATION OF THE NONPARAMETRIC BOOTSTRAP, p334-335,
@@ -49,49 +51,89 @@ for j = 1:m
         end
     end
 end
+%%
+for i = 1:K
+    figure;
+    t = tiledlayout(2, 2, ...
+        'TileSpacing','compact', ...
+        'Padding','compact');
+    nexttile;
+    boxplot(alpha_hat(:,:,i), 'Labels', string(alpha1_grid));
+    title('$\alpha$ estimates', 'Interpreter','latex', 'FontSize',24);
+    xlabel('$\alpha_1$ grid', 'Interpreter','latex', 'FontSize',18);
+    ylabel('$\hat{\alpha}$', 'Interpreter','latex', 'FontSize',24);
+    grid on;
+
+    nexttile;
+    boxplot(beta_hat(:,:,i), 'Labels', string(alpha1_grid));
+    title('$\beta$ estimates', 'Interpreter','latex', 'FontSize',24);
+    xlabel('$\alpha_1$ grid', 'Interpreter','latex', 'FontSize',18);
+    ylabel('$\hat{\beta}$', 'Interpreter','latex', 'FontSize',24);
+    yline(0,'--k','True Value',FontSize=14);
+    grid on;
+
+    nexttile;
+    boxplot(sigma_hat(:,:,i), 'Labels', string(alpha1_grid));
+    title('$\sigma$ estimates', 'Interpreter','latex', 'FontSize',24);
+    xlabel('$\alpha_1$ grid', 'Interpreter','latex', 'FontSize',18);
+    ylabel('$\hat{\sigma}$', 'Interpreter','latex', 'FontSize',24);
+    grid on;
+
+    nexttile;
+    boxplot(mu_hat(:,:,i), 'Labels', string(alpha1_grid));
+    title('$\mu$ estimates', 'Interpreter','latex', 'FontSize',24);
+    xlabel('$\alpha_1$ grid', 'Interpreter','latex', 'FontSize',18);
+    ylabel('$\hat{\mu}$', 'Interpreter','latex', 'FontSize',24);
+    yline(0,'--k','True Value',FontSize=14);
+    grid on;
+    sgtitle(sprintf('Stable Parameter Estimates Across Simulations (n = %d, n-sim = %d)', n(i), nsim), ...
+            'Interpreter','latex',fontsize=38);
+
+end
 
 %%
+b500 = importdata("CI_1k_10k_B500.mat");
+
+figure;
+tiledlayout(2,3,'TileSpacing','compact','Padding','compact');
+
+for j = 1:m
+    nexttile;
+    hold on;
+
+    for i = 1:K
+        histogram(b500(:,j,i), 30); 
+    end
+
+    hold off;
+
+    title(sprintf('$\\alpha_1 = %.2f$', alpha1_grid(j)),'Interpreter','latex',FontSize=24);
+    xlabel('CI Length','Interpreter','latex',FontSize=24);
+    ylabel('Frequency','Interpreter','latex',FontSize=24);
+    grid on;
+end
+
+L = cell(K,1);
+for i = 1:K
+    L{i} = ['n = ' num2str(n(i))];
+end
+
+legend(L,'Interpreter','latex','Location','bestoutside',FontSize=24);
+
+
+%%
+b50 = importdata("CI_1k_10k_B50.mat");
+
+%
+
 
 for i=1:K
-    figure;
-    
-    subplot(2,2,1)
-    boxplot(alpha_hat(:,:,i), 'Labels', string(alpha1_grid));
-    title('$\alpha$ estimates', 'Interpreter','latex');
-    xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-    ylabel('$\hat{\alpha}$', 'Interpreter','latex');
-    grid on
-    
-    subplot(2,2,2)
-    boxplot(beta_hat(:,:,i), 'Labels', string(alpha1_grid));
-    title('$\beta$ estimates', 'Interpreter','latex');
-    xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-    ylabel('$\hat{\beta}$', 'Interpreter','latex');
-    grid on
-    
-    subplot(2,2,3)
-    boxplot(sigma_hat(:,:,i), 'Labels', string(alpha1_grid));
-    title('$\sigma$ estimates', 'Interpreter','latex');
-    xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-    ylabel('$\hat{\sigma}$', 'Interpreter','latex');
-    grid on
-    
-    subplot(2,2,4)
-    boxplot(mu_hat(:,:,i), 'Labels', string(alpha1_grid));
-    title('$\mu$ estimates', 'Interpreter','latex');
-    xlabel('$\alpha_1$ grid', 'Interpreter','latex');
-    ylabel('$\hat{\mu}$', 'Interpreter','latex');
-    grid on
-    
-    sgtitle(sprintf('Stable Parameter Estimates Across Simulations (n = %d, n-sim = %d)', n(i), nsim), ...
-            'Interpreter','latex');
-        
-    figure;
+
     ax = gobjects(m,1);   
     
     for j = 1:m
         ax(j) = subplot(2,3,j);
-        histogram(CI_length(:,j,i), 30);
+        histogram(b50(:,j,i), 30);
         title(sprintf('$\\alpha_1 = %.2f$', alpha1_grid(j)),'Interpreter','latex');
         xlabel('CI Length','Interpreter','latex');
         ylabel('Frequency','Interpreter','latex');
