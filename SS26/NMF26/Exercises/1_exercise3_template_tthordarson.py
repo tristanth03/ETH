@@ -4,7 +4,7 @@ import numpy.linalg as lin
 
 
 # Set how floating-point errors are handled.
-# np.seterr(all='raise')  
+np.seterr(all='raise')  
 
 
 def initial_value(x):
