@@ -102,7 +102,7 @@ else:
     M = np.array([4**l for l in range(2,nb_samples+2)])
 
 theta_v = np.array([0.3,0.5,1])
-theta= theta_v[0] # fill in this line for f)-g)
+theta= theta_v[2] # fill in this line for f)-g)
 
 ### Do not change any code below! ####
 l2error = np.zeros(nb_samples) 
