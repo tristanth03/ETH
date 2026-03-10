@@ -4,7 +4,6 @@ import numpy.linalg as lin
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 
-
 def kappa_integral(x,y):
     # todo 3 a)
 
@@ -70,6 +69,7 @@ def FEM_theta(N,M,theta):
     A = build_rigidityMatrix(N)
     k = 1/M
     h = 1/(N+1)
+    
     x = np.array([h*i for i in range(1,N+1)])
     B_theta = (1/k *M_mat+theta*A)
     B_theta_inv = lin.pinv(B_theta)
@@ -95,14 +95,16 @@ def FEM_theta(N,M,theta):
 nb_samples = 5
 N = np.array([2**l-1 for l in range(2,nb_samples+2)])# fill in this line for f)-g)
 
-part_f = False
+part_f = True
 if part_f:
     M = np.array([2**l for l in range(2,nb_samples+2)])
+    print("## Part f\n")
 else:
     M = np.array([4**l for l in range(2,nb_samples+2)])
+    print("## Part g\n")
 
 theta_v = np.array([0.3,0.5,1])
-theta= theta_v[2] # fill in this line for f)-g)
+theta= theta_v[0] # fill in this line for f)-g)
 
 ### Do not change any code below! ####
 l2error = np.zeros(nb_samples) 
@@ -129,3 +131,11 @@ try:
    plt.show()
 except Exception as e:
     print(e)
+
+print(f"l2error: {l2error}")
+
+
+## Comments from me:
+# -- the error handling is again not very precise, namely if there is an overflow
+#  the catch will be "too late", regardless there will be an overflow and 
+#  ofcourse the message will be printed
