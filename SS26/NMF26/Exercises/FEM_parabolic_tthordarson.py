@@ -94,6 +94,7 @@ def FEM_theta(N, M, theta):
     x = h*np.arange(1,N+1)
     mass_mat = build_massMatrix(N)
     rig_mat = build_rigidityMatrix(N,alpha,beta,gamma)
+
     B = (mass_mat+k*theta*rig_mat)
     B_inv = lin.pinv(B)
     C = (mass_mat-k*(1-theta)*rig_mat)
@@ -111,22 +112,22 @@ def FEM_theta(N, M, theta):
 nb_samples = 5
 l = np.arange(5,10)
 part_f = False
-part_banana = True
+part_longer = True
 if part_f:
     M = np.power(2,l,dtype=int)
     N = np.power(2,l,dtype=int)-1
     print("## Part c -- ")
 
-# elif part_banana:
-#     M = np.power(4,l,dtype=int)
-#     N = np.power(2,l,dtype=int)-1
-#     print("## Part d -- ")
+elif part_longer:
+    M = np.power(4,l,dtype=int)
+    N = np.power(2,l,dtype=int)-1
+    print("## Part d (with the larger l grid) -- ")
 else:
     M = np.power(4,l-3,dtype=int)
     N = np.power(2,l-3,dtype=int)-1
     print("## Part d -- ")
 
-theta = 0.5 # fill in this line for 3c)-d)
+theta = 1 # fill in this line for 3c)-d)
 print(f"theta = {theta} \n")
 #### Do not change any code below! ####
 l2error = np.zeros(nb_samples)
