@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "font": {
+    "family": "Georgia, serif",
+    "size": {
+      "tick":    10,
+      "label":   10,
+      "section": 9,
+      "sub":     9
+    }
+  },
+  "themes": {
+    "navy_vault": {
+      "canvas":   "#f2f4f6",
+      "obs":      "#060F22",
+      "body":     "#0C1C3E",
+      "mid":      "#0E6090",
+      "cyan":     "#1AB8DC",
+      "silver":   "#A8B8C8",
+      "ci":       "#D8E4EC",
+      "text":     "#060F22",
+      "subtext":  "#3a5060",
+      "accent":   "#0E6090",
+      "grid":     "rgba(6,15,34,0.07)"
+    },
+    "gunmetal": {
+      "canvas":   "#030A14",
+      "obs":      "#060F22",
+      "body":     "#0A1C30",
+      "mid":      "#143050",
+      "cyan":     "#38B8E0",
+      "silver":   "#C0D0DC",
+      "ci":       "#708898",
+      "text":     "#C0D0DC",
+      "subtext":  "#7090a8",
+      "accent":   "#38B8E0",
+      "grid":     "rgba(192,208,220,0.09)"
+    }
+  }
+}
