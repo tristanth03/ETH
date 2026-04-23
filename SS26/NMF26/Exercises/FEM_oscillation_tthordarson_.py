@@ -93,7 +93,7 @@ for beta in range(1,20,2):
         for i in range(len(u1)):
             norm+=(u1[i]-u2[2*i+1])**2
         return np.sqrt(h*norm)
-    conv_rate = np.log(h_norm(h_l[0],u_l[0],u_l[1])/h_norm(h_l[1],u_l[1],u_l[2]))/np.log(2) # Estimate the convergence rate
+    conv_rate = np.log(h_norm(h_l[0],u_l[0],u_l[1])/h_norm(h_l[1],u_l[1],u_l[2]))/np.log(2) 
     print(
         f"FEM with theta={theta}, beta={beta}: Convergence rate in discrete l^2 norm with respect to time step $k$: {conv_rate}"
     )
