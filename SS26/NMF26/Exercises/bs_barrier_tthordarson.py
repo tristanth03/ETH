@@ -82,7 +82,7 @@ if __name__ == '__main__':
     S = np.exp(x)*K                                 # corresponding real prices
 
     # compute up-and-out barrier
-    uout = FEM_theta(N=N,M=M,R=R,B=B,r=r,sigma=sigma,K=K,T=T,theta=0.5)                                  # price of up-and-out barrier option
+    uout = FEM_theta(N=N,M=M,R=R,B=B,r=r,sigma=sigma,K=K,T=T,theta=0.5)   # price of up-and-out barrier option
 
     # # transform solution (Log-moneyness)
     uout = uout*K
@@ -92,12 +92,9 @@ if __name__ == '__main__':
     ubs = bseucall(S, T, K, r, sigma)
     uin = ubs-uout
 
-
     # # Postprocessing
     # # area of interest
     I = np.abs(x) < 0.75
-    i_peak = np.argmax(uout)
-    print(f"S_peak = {S[i_peak]:.6f}, FEM price = {uout[i_peak]:.6f}")
 
     # plot solution
     plt.figure(1)
@@ -108,5 +105,5 @@ if __name__ == '__main__':
     plt.xlabel('s')
     plt.ylabel('Option price')
     plt.legend(loc='upper right')
-    plt.savefig('price.eps', format='eps')
+    # plt.savefig('price.eps', format='eps')
     plt.show()
