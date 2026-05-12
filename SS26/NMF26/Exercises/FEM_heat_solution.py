@@ -72,10 +72,10 @@ def FEM_theta(N,M,theta):
 nb_samples = 5
 N = np.power(2, np.arange(2, 2 + nb_samples))-1
 # M in the case of 3 g)
-M = np.power(4, np.arange(2, 2 + nb_samples))
+M = np.power(2, np.arange(2, 2 + nb_samples))
 # M in the case of 3 f)
 # M = np.power(2, np.arange(2, 2 + nb_samples))
-theta=1 # Change the theta to 0.5 or 1 when needed in 3 f)-g)
+theta=0.5 # Change the theta to 0.5 or 1 when needed in 3 f)-g)
 
 
 #### Do not change any code below! ####

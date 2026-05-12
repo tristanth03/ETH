@@ -36,7 +36,7 @@ def eulerexplicit(N, M):
 
         u_m = u[:,m]
         u[:,m+1] = C@u_m
-    
+    print(u[:,0])
     u_M = u[:,-1]
         
     return u_M
