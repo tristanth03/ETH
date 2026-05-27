@@ -81,27 +81,31 @@ nb_samples = 3
 N = np.power(2, np.arange(9, 9 + nb_samples)) - 1
 M = np.power(2, np.arange(9, 9 + nb_samples))
 theta = 0.5
-# beta = 1 # set beta according to b) and d)
+beta = 17 # set beta according to b) and d)
 
-for beta in range(1,20,2):
-    u_l = []
-    for i in range(nb_samples):
-        u_l.append(FEM_theta(N[i],M[i],theta,beta))
-    h_l = 1/N
-    def h_norm(h,u1,u2):
-        norm = 0
-        for i in range(len(u1)):
-            norm+=(u1[i]-u2[2*i+1])**2
-        return np.sqrt(h*norm)
-    conv_rate = np.log(h_norm(h_l[0],u_l[0],u_l[1])/h_norm(h_l[1],u_l[1],u_l[2]))/np.log(2) 
-    print(
-        f"FEM with theta={theta}, beta={beta}: Convergence rate in discrete l^2 norm with respect to time step $k$: {conv_rate}"
-    )
+# plt.plot(FEM_theta(N[2],M[2],theta,beta))
+# plt.show()
 
-    plt.plot(beta,conv_rate,'ro')
-    plt.xlabel(fr"$\beta$")
-    plt.ylabel(fr"Convergence rate $p$")
-plt.show()
+print(FEM_theta(N[2],M[2],theta,beta)[-1])
+# for beta in range(1,20,2):
+#     u_l = []
+#     for i in range(nb_samples):
+#         u_l.append(FEM_theta(N[i],M[i],theta,beta))
+#     h_l = 1/N
+#     def h_norm(h,u1,u2):
+#         norm = 0
+#         for i in range(len(u1)):
+#             norm+=(u1[i]-u2[2*i+1])**2
+#         return np.sqrt(h*norm)
+#     conv_rate = np.log(h_norm(h_l[0],u_l[0],u_l[1])/h_norm(h_l[1],u_l[1],u_l[2]))/np.log(2) 
+#     print(
+#         f"FEM with theta={theta}, beta={beta}: Convergence rate in discrete l^2 norm with respect to time step $k$: {conv_rate}"
+#     )
+
+#     plt.plot(beta,conv_rate,'ro')
+#     plt.xlabel(fr"$\beta$")
+#     plt.ylabel(fr"Convergence rate $p$")
+# plt.show()
 
 
 

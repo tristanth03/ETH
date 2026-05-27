@@ -71,10 +71,13 @@ def FEM_theta(N,M,theta):
     u = np.zeros(shape=(N+2,M+1))
     x = np.linspace(0,1,num=N+2)
 
+
     u[1:-1,0] = initial_value(x[1:-1])
     for t in range(1,M+1): # Careful with multiplycation of k !
         LHS = C_theta@u[1:-1,t-1]+k*((theta*build_F(t*k,N)+(1-theta)*build_F((t-1)*k,N)))
         u[1:-1,t] = spsolve(B_theta,LHS.T)
+    print(u[1:-1,-1])
+
     return u[1:-1,-1]
 
 
