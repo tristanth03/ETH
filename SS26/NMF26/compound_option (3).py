@@ -4,49 +4,41 @@ from scipy.sparse import diags
 from scipy.sparse.linalg import spsolve
     
 
-def mass_mat(N,h):
-    sub = [1/6]*(N-1)
+def M_mat(N,h):
     sup = [1/6]*(N-1)
+    sub = [1/6]*(N-1)
     diag = [2/3]*(N)
+    return h*(diags(sup,1)+diags(diag,0)+diags(sub,-1))
 
-    return h* (diags(sup,1)+diags(sub,-1)+diags(diag,0))
+def A_mat(N,r,sigma,h):
+    sup = [r*h/6+1/2*(sigma**2/2-r)-sigma**2/(2*h)]*(N-1)
+    sub = [r*h/6-1/2*(sigma**2/2-r)-sigma**2/(2*h)]*(N-1)
+    diag = [2*r*h/3+sigma**2/h]*(N)
+    return (diags(sup,1)+diags(diag,0)+diags(sub,-1))  
 
-def rig_mat(N,h,r,sigma):
-    sup = [r*h / 6 + (sigma**2 /2-r)*0.5 - 0.5*sigma**2/h]*(N-1)
-    sub = [r*h / 6 - (sigma**2/2-r)*0.5 - 0.5*sigma**2/h]*(N-1)
-    diag = [2/3 * r*h + sigma**2 /h]*(N)
-
-    return (diags(sup,1)+diags(sub,-1)+diags(diag,0))
-
-def initial(x,K):
-    return np.maximum((x-K),0)
+def g(s,K):
+    return np.maximum(s-K,0)
 
 def solve_fem_two_stage(N, M, R, sigma, r, K, K1, T, T1, theta):
     k = T1/M
     h = 2*R / N
-    M1 = int((T1-T)/k-1)
-    print(M1)
-    M2 = int((T/k)-1)
-    A_mat = rig_mat(N-1,h,r,sigma)
-    M_mat = mass_mat(N-1,h)
-
-    LHS = (M_mat+k*theta*A_mat)
-    u = np.zeros(shape=(N-1,M1+1))
-    u[:,0] = initial(np.exp(np.linspace(-R,R,N+1)[1:-1]),K1)
+    M0 = int(np.ceil((T1-T)/k))
+    M1 = int(np.ceil(T/k))
+    u = np.zeros(shape=(N-1,M0+1))
+    v = np.zeros(shape=(N-1,M1+1))
+    u[:,0] = g(np.exp(np.linspace(-R,R,N+1)[1:-1]),K1)
+    A = A_mat(N-1,r,sigma,h)
+    M_ = M_mat(N-1,h)
+    LHS = (M_+k*theta*A)
+    for m in range(1,M0+1):
+        RHS = (M_-k*(1-theta)*A)@u[:,m-1]
+        u[:,m] = spsolve(LHS,RHS)
+    v[:,0] = g(u[:,-1],K)
     for m in range(1,M1+1):
-        RHS1 = (M_mat-k*(1-theta)*A_mat)@u[:,m-1]
-        u[:,m] = spsolve(LHS,RHS1)
-
-    v = np.zeros(shape=(N-1,M2+1))
-    v[:,0] = initial(u[:,-1],K)
-    for m in range(1,M2+1):
-        RHS2 = (M_mat-k*(1-theta)*A_mat)@v[:,m-1]
-        v[:,m] = spsolve(LHS,RHS2)
+        RHS = (M_-k*(1-theta)*A)@v[:,m-1]
+        v[:,m] = spsolve(LHS,RHS)
 
     return np.linspace(-R,R,N+1)[1:-1],u[:,-1],v[:,-1]
-
-
-    
 
 # Parameters
 sigma = 0.3

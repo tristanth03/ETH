@@ -1,0 +1,108 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsfonts,latexsym}
+\usepackage{graphicx,psfrag}
+%\usepackage{algorithm, algorithmic}
+\IEEEoverridecommandlockouts
+\hyphenation{op-tical net-works semi-conduc-tor}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+
+\begin{document}
+
+\title{Investments: Machine Learning for Finance}
+\author{Your Names$^{\diamond}$
+\thanks{$\diamond$ Master of Science UZH ETH in Quantitative Finance}}
+\maketitle
+
+% As a general rule, do not put math, special symbols or citations
+% in the abstract or keywords.
+\begin{abstract}
+3-5 sentences on your main findings
+\vspace{10ex}
+\end{abstract}
+
+\section{Introduction}
+
+Discuss the role of machine learning in finance and, in particular, in active portfolio management. 
+\vspace{5ex}
+
+\section{Objective}
+
+The objective is to develop a ML-based trading algorithm for a stock index (or equivalent with appropriate motivation). 
+
+\vspace{2ex}
+\noindent
+Explain why trading relies on predictions (to what extent?).  
+\vspace{5ex}
+
+
+\section{Network Architectures}
+
+Start with some principles of ML (what is it about?), then describe your network architecture detail. Explain what you can do for regularization. 
+
+\vspace{2ex}
+\noindent
+\textit{Hint:} Take some inspiration from chapters 9, 10 and 14 in \cite{goodfellow2016deep}.
+
+\subsection{Autoencoders}
+
+\vspace{5ex}
+
+\subsection{Recurrent/ Convolutional Networks}
+
+\vspace{5ex}
+
+\subsection{Transformers}
+
+\vspace{5ex}
+
+
+\section{Experiments}
+
+
+
+
+\noindent
+[This is the main section in your paper]
+
+\subsection{Choice of signals}
+\vspace{5ex}
+
+\subsection{Choice of network type and parameters}
+\vspace{5ex}
+
+\subsection{Results}
+
+Show \& tell: Include charts and discuss results. The discussion is focused on variations of the above choices and their impact on results. Discuss the results using the in--sample/ out--of--sample information coefficient (predictive power) and Sharpe ratio of the trading strategy.  
+
+\noindent
+Use \textbf{at least two sets of signals} and provide an \textbf{economic motivation}  for your choices. For every experiment, state a clear hypothesis of what you expect to see and comment if the hypothesis is supported by your results. 
+\vspace{5ex}
+
+\section{Conclusion}
+
+Take--away and possible future work. 
+\vspace{10ex}
+
+\section*{INSTRUCTIONS}
+\vspace{1ex}
+\begin{itemize}
+	\item Paper length: 8 pages. Please do not change the *.sty file.
+	\item Use the OLAT dropbox for submission (one submission per group of max. 3 students).
+	\item The submission package consists of one *.pdf file (paper) plus one *.zip file containing code (*.py or *.ipynb files) and potentially additional data (*.csv or *.xls).
+	\item All results must be reproducible using the submitted code and data. 
+	\item Submission deadline: June 25th, 8 pm.
+	\item Presentation: June 26th, starting at 12.15 pm. (15 mins per group), please use charts in the paper to present main results (no separate *.ppt needed!), split the presentation among all group members and be prepared to take questions (from all participants during 5 mins following your presentation). 
+	\item As a sign of appreciation of the work done by all participants, presence is required during all presentations. Thank you.
+
+\end{itemize}
+\vspace{2ex}
+$\quad$ Good luck!
+
+\vspace{5ex}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{mybibfile}
+\end{document}
