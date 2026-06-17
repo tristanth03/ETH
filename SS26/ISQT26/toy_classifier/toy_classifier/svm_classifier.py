@@ -33,7 +33,7 @@ def equiv_kernel(test_data, support_inputs, support_labels, centers):
     return np.sum(tmp, axis=0)
 
 #Read the data
-df = pd.read_excel('toy_data.xlsx')
+df = pd.read_excel('C:\Programming\ETH\SS26\ISQT26\\toy_classifier\\toy_classifier\\toy_data.xlsx')
 
 # Assign in and output
 inputs = df[['x1', 'x2']].values

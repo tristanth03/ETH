@@ -127,7 +127,7 @@ class TimeSeriesTransformerMultiStep(tf.keras.Model):
 
 if __name__ == '__main__':
     # PREPARE DATA
-    df = pd.read_excel('market_data.xlsx',sheet_name='US', engine='openpyxl')
+    df = pd.read_excel(r'C:\Programming\ETH\SS26\ISQT26\market_transformer\market_data.xlsx',sheet_name='US', engine='openpyxl')
     df = df.set_index(df['Date'])
     df = df.drop(columns='Date')
     df['MKT'] = df['_MKT'].pct_change(52)

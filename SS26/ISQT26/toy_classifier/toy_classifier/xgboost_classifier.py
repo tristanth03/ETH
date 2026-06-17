@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 if __name__ == '__main__':
 
-    df = pd.read_excel('toy_data.xlsx')
+    df = pd.read_excel('C:\Programming\ETH\SS26\ISQT26\\toy_classifier\\toy_classifier\\toy_data.xlsx')
     X = df[['x1', 'x2']].values
     y = df['y'].values
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

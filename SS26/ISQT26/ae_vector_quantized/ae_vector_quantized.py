@@ -216,7 +216,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------------
     # 1. LOAD AND PREPARE DATA
     # -----------------------------------------------------------------------
-    df = pd.read_excel('market_data.xlsx', sheet_name='US', engine='openpyxl')
+    df = pd.read_excel(r'C:\Programming\ETH\SS26\ISQT26\ae_vector_quantized\market_data.xlsx', sheet_name='US', engine='openpyxl')
     df = df.set_index(df['Date']).drop(columns='Date')
     df0 = df.copy()                        # keep raw prices for PnL later
     cols = ['_TY', 'ED', '_MKT']

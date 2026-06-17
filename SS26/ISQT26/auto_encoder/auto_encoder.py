@@ -11,7 +11,7 @@ nr_epochs = 80
 lr = 0.2
 
 #Reading toy data
-df = pd.read_csv('toy_data.csv')
+df = pd.read_csv('C:\Programming\ETH\SS26\ISQT26\\auto_encoder\\toy_data.csv')
 ns = 1500
 dat = np.zeros((ns,100))
 for i in range(0, ns):

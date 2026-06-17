@@ -16,7 +16,7 @@ class Autoencoder(tf.keras.models.Model):
     encoder_input = tf.keras.Input(shape=(num_inputs,), name="input")
     enc = tf.keras.layers.Dense(num_hidden, activation='sigmoid')(encoder_input)
     self.encoder = tf.keras.Model(inputs=encoder_input, outputs=enc)
-    decoder_input = tf.keras.Input(num_hidden,)
+    decoder_input = tf.keras.Input(shape=(num_hidden,))
     rec = tf.keras.layers.Dense(num_inputs, activation='linear')(decoder_input)
     self.decoder = tf.keras.Model(inputs=decoder_input, outputs=rec)
 
@@ -29,13 +29,12 @@ class Autoencoder(tf.keras.models.Model):
     drv = tf.math.sigmoid(tmp) * (1 - tf.math.sigmoid(tmp))
     contractive_loss = tf.reduce_sum(tf.norm(tf.expand_dims(drv, 1) * tf.expand_dims(w, 0), ord='fro', axis=[1,2]))
     self.add_loss(0.0015 * contractive_loss)
-    self.add_metric(contractive_loss, "contractive")
     decoded = self.decoder(u)
     return decoded
 
 if __name__ == '__main__':
     lb = 5
-    df = pd.read_excel('data.xlsx', sheet_name='US MKT', engine='openpyxl', index_col=0)
+    df = pd.read_excel('C:\Programming\ETH\SS26\ISQT26\market_autoencoder\data.xlsx', sheet_name='US MKT', engine='openpyxl', index_col=0)
     df = df.apply(zscore)
     ds = tf.keras.preprocessing.timeseries_dataset_from_array(df.values, None, lb, batch_size=100, shuffle=False)
     dss = ds.map(sstack)
@@ -51,8 +50,8 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(1,3)
     ax[0].plot(history.history['loss'])
     ax[1].plot(history.history['mean_squared_error'])
-    ax[2].plot(history.history['contractive'])
-    ax[2].set_title('Contractive Loss')
+    ax[2].plot(history.history['mean_squared_error'])
+    ax[2].set_title('Reconstruction MSE')
 
     fig, axs = plt.subplots(3)
     y_true = np.concatenate([x for x, y in dss], axis=0)
